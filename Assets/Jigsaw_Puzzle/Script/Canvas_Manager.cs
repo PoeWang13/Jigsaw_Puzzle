@@ -124,7 +124,7 @@ public class Canvas_Manager : Singletion<Canvas_Manager>
             backImage.sprite = Save_Load_Manager.Instance.gameData.puzzleBackground[e].puzzleBackground;
             Button backButton = back.GetComponent<Button>();
             int order = e;
-            button.onClick.AddListener(() => SetBackground(order));
+            backButton.onClick.AddListener(() => SetBackground(order));
             // Video gösterimi
             GameObject backVideo = back.GetChild(0).gameObject;
             backVideo.SetActive(Save_Load_Manager.Instance.gameData.puzzleBackground[e].isVideo);
@@ -133,6 +133,8 @@ public class Canvas_Manager : Singletion<Canvas_Manager>
             backPrice.SetActive(Save_Load_Manager.Instance.gameData.puzzleBackground[e].isPrice != 0);
             backPrice.GetComponentInChildren<TextMeshProUGUI>().text = Save_Load_Manager.Instance.gameData.puzzleBackground[e].isPrice.ToString();
         }
+
+        SetBackground(0);
     }
     private void SetBackground(int order)
     {
