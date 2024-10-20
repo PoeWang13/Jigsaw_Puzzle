@@ -1,8 +1,10 @@
 ﻿using TMPro;
+using System;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class Canvas_Manager : Singletion<Canvas_Manager>
 {
@@ -10,6 +12,7 @@ public class Canvas_Manager : Singletion<Canvas_Manager>
     [SerializeField] private Transform puzzleAllParent;
     [SerializeField] private GameObject puzzleAllContainer;
     [SerializeField] private Transform prefabPuzzleContainer;
+    [SerializeField] private Transform sceneMaskImage;
     [SerializeField] private TextMeshProUGUI textGoldAmount;
 
     [Header("Puzzle Diary")]
@@ -30,7 +33,7 @@ public class Canvas_Manager : Singletion<Canvas_Manager>
     [Header("Puzzle Setting")]
     [SerializeField] private GameObject objStartPuzzle;
     [SerializeField] private GameObject objIsVideo;
-    [SerializeField] private Image imagePuzzleIcon;
+    [SerializeField] private RawImage imagePuzzleIcon;
     [SerializeField] private TextMeshProUGUI textPuzzleReward;
     [SerializeField] private Button buttonPieceCanTurn;
     [SerializeField] private Button buttonPieceCanDontTurn;
@@ -38,7 +41,7 @@ public class Canvas_Manager : Singletion<Canvas_Manager>
 
     [Header("Puzzle Game")]
     [SerializeField] private GameObject objPuzzleGame;
-    [SerializeField] private Image puzzleSprite;
+    [SerializeField] private RawImage puzzleSpriteIcon;
     [SerializeField] private Transform puzzleBackgroundParent;
     [SerializeField] private TextMeshProUGUI textFinishGoldAmount;
     [SerializeField] private TextMeshProUGUI textFinishIncreaseAmount;
@@ -46,10 +49,9 @@ public class Canvas_Manager : Singletion<Canvas_Manager>
 
     [Header("Puzzle Game Button")]
     [SerializeField] private GameObject objPuzzleGameButton;
-    [SerializeField] private Image imageGameBackground;
-    [SerializeField] private Image imageGameMiniIcon;
+    [SerializeField] private RawImage imageGameBackground;
+    [SerializeField] private RawImage imageGameMiniIcon;
     [SerializeField] private Transform pieceHolder;
-    [SerializeField] private Transform puzzleGameArea;
 
     [Header("Puzzle Finish")]
     [SerializeField] private GameObject objPuzzleFinish;
@@ -64,84 +66,107 @@ public class Canvas_Manager : Singletion<Canvas_Manager>
     private List<Piece> edgePiece = new List<Piece>();
     private List<Puzzle_Single> puzzleGroupList = new List<Puzzle_Single>();
 
+    #region Genel
     private void Start()
     {
-        // Puzzle Piece amount butonlarını belirle
-        for (int e = 0; e < puzzleAmountList.Count; e++)
-        {
-            if (int.TryParse(puzzleAmountList[e].GetComponentInChildren<TextMeshProUGUI>().text, out int amount))
+        CloseMask(1, () => {
+            // Puzzle Piece amount butonlarını belirle
+            for (int e = 0; e < puzzleAmountList.Count; e++)
             {
-                puzzleAmount.Add(amount);
-                puzzleAmountList[e].onClick.AddListener(() => SetPieceAmont(amount));
+                if (int.TryParse(puzzleAmountList[e].GetComponentInChildren<TextMeshProUGUI>().text, out int amount))
+                {
+                    puzzleAmount.Add(amount);
+                    puzzleAmountList[e].onClick.AddListener(() => SetPieceAmont(amount));
+                }
             }
-        }
+            // Background butonları ayarla
+            SetBackgroundButton();
 
-        // Background butonları ayarla
-        SetBackgroundButton();
+            // Puzzle Diary'leri ayarla
+            CreatePuzzleDiary();
 
-        // Puzzle Diary'leri ayarla
-        CreatePuzzleDiary(Save_Load_Manager.Instance.gameData.puzzleDiary);
+            // Puzzle Group'larını ayarla
+            CreatePuzzleGroup();
 
-        // Puzzle Group'larını ayarla
-        CreatePuzzleGroup(Save_Load_Manager.Instance.gameData.puzzleGroup);
+            // Puzzle Game Piece'lerinin Turn ayarını belirle
+            SetTurnPiece(false);
 
-        // Puzzle Game Piece'lerinin Turn ayarını belirle
-        SetTurnPiece(Save_Load_Manager.Instance.gameData.canTurnPiece);
+            // Puzzle Game Piece'lerinin Amount ayarını belirle
+            SetPieceAmont(Save_Load_Manager.Instance.gameData.pieceAmount);
 
-        // Puzzle Game Piece'lerinin Amount ayarını belirle
-        SetPieceAmont(Save_Load_Manager.Instance.gameData.pieceAmount);
-
-        // Canvas'da Gold ayarını belirle
-        textGoldAmount.text = Save_Load_Manager.Instance.gameData.gold.ToString();
+            // Canvas'da Gold ayarını belirle
+            textGoldAmount.text = Save_Load_Manager.Instance.gameData.gold.ToString();
+        });
     }
+    private void CloseMask(float waitingTime, Action action)
+    {
+        // Bekle
+        DOVirtual.DelayedCall(waitingTime,
+            () =>
+            {
+                // Close Mask
+                DOTween.To(value => { sceneMaskImage.localScale = Vector3.one * value; }, startValue: 2, endValue: 0, duration: 1.5f)
+                    .SetEase(Ease.Linear).OnComplete(() =>
+                    {
+                        action?.Invoke();
+                    });
+            });
+    }
+    private void OpenMask(float waitingTime, Action action)
+    {
+        // Bekle
+        DOVirtual.DelayedCall(waitingTime,
+            () =>
+            {
+                action?.Invoke();
+                // Open Mask
+                DOTween.To(value => { sceneMaskImage.localScale = Vector3.one * value; }, startValue: 0, endValue: 2, duration: 1.5f)
+                .SetEase(Ease.Linear);
+            });
+    }
+    public void LoadScene(string sceneName)
+    {
+        SceneManager.LoadScene(sceneName);
+    }
+    // Canvas -> AreWeOnline -> Button-Reload-Scene butonuna atandı.
+    public void ReloadScene()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+    #endregion
     private void SetBackgroundButton()
     {
-        puzzleBackgroundParent.GetChild(0).gameObject.SetActive(true);
-        Image image = puzzleBackgroundParent.GetChild(0).GetComponent<Image>();
-        image.sprite = Save_Load_Manager.Instance.gameData.puzzleBackground[0].puzzleBackground;
-        Button button = puzzleBackgroundParent.GetChild(0).GetComponent<Button>();
-        button.onClick.AddListener(() => SetBackground(0));
-        // Video gösterimi
-        GameObject isVideo = puzzleBackgroundParent.GetChild(0).GetChild(0).gameObject;
-        isVideo.SetActive(Save_Load_Manager.Instance.gameData.puzzleBackground[0].isVideo);
-
-        // Price gösterimi
-        GameObject isPrice = puzzleBackgroundParent.GetChild(0).Find("Panel-Price").gameObject;
-        if (Save_Load_Manager.Instance.gameData.puzzleBackground[0].isPrice == 0)
-        {
-            isPrice.SetActive(false);
-        }
-        else
-        {
-            isPrice.SetActive(true);
-            isPrice.GetComponentInChildren<TextMeshProUGUI>().text = Save_Load_Manager.Instance.gameData.puzzleBackground[0].isPrice.ToString();
-        }
-
+        puzzleBackgroundParent.GetChild(0).GetComponent<Puzzle_Background>().SetPuzzleBackground(0);
         for (int e = 1; e < Save_Load_Manager.Instance.gameData.puzzleBackground.Count; e++)
         {
             Transform back = Instantiate(puzzleBackgroundParent.GetChild(0), puzzleBackgroundParent);
-            Image backImage = back.GetComponent<Image>();
-            backImage.sprite = Save_Load_Manager.Instance.gameData.puzzleBackground[e].puzzleBackground;
-            Button backButton = back.GetComponent<Button>();
-            int order = e;
-            backButton.onClick.AddListener(() => SetBackground(order));
-            // Video gösterimi
-            GameObject backVideo = back.GetChild(0).gameObject;
-            backVideo.SetActive(Save_Load_Manager.Instance.gameData.puzzleBackground[e].isVideo);
-            // Price gösterimi
-            GameObject backPrice = back.GetChild(1).gameObject;
-            backPrice.SetActive(Save_Load_Manager.Instance.gameData.puzzleBackground[e].isPrice != 0);
-            backPrice.GetComponentInChildren<TextMeshProUGUI>().text = Save_Load_Manager.Instance.gameData.puzzleBackground[e].isPrice.ToString();
+            back.GetComponent<Puzzle_Background>().SetPuzzleBackground(e);
         }
-
-        SetBackground(0);
     }
-    private void SetBackground(int order)
+    public bool BuyBackground(int order)
     {
-        imageGameBackground.sprite = Save_Load_Manager.Instance.gameData.puzzleBackground[order].puzzleBackground;
+        if (Save_Load_Manager.Instance.gameData.gold >= Save_Load_Manager.Instance.gameData.puzzleBackground[order].isPrice)
+        {
+            Save_Load_Manager.Instance.gameData.gold -= Save_Load_Manager.Instance.gameData.puzzleBackground[order].isPrice;
+            IncreaseGold(-Save_Load_Manager.Instance.gameData.puzzleBackground[order].isPrice);
+            Save_Load_Manager.Instance.gameData.puzzleBackground[order].isOpen = true;
+            SetBackground(order);
+            Save_Load_Manager.Instance.SaveGame();
+            return true;
+        }
+        else
+        {
+            Warning_Manager.Instance.ShowMessage("You dont have enough Gold.", 2);
+            return false;
+        }
+    }
+    public void SetBackground(int order)
+    {
+        imageGameBackground.texture = Save_Load_Manager.Instance.gameData.puzzleBackground[order].myTexture;
+        Save_Load_Manager.Instance.gameData.backgroundOrder = order;
         puzzleBackgroundParent.parent.gameObject.SetActive(false);
     }
-    private void CreatePuzzleDiary(List<PuzzleDiary> puzzleDiaryList)
+    private void CreatePuzzleDiary()
     {
         Transform puzzleContainer = Instantiate(prefabPuzzleContainer, puzzleAllParent);
         puzzleContainer.GetComponentInChildren<TextMeshProUGUI>().text = "Diary Puzzle";
@@ -152,26 +177,26 @@ public class Canvas_Manager : Singletion<Canvas_Manager>
         RectTransform rectParent = puzzleParent.GetComponent<RectTransform>();
         rectParent.sizeDelta = new Vector2(rectParent.sizeDelta.x, 230);
 
-        for (int e = 0; e < puzzleDiaryList.Count; e++)
+        for (int e = 0; e < Save_Load_Manager.Instance.gameData.puzzleDiary.Count; e++)
         {
             Puzzle_Diary puzzle = Instantiate(prefabPuzzle_Diary, puzzleParent);
-            puzzle.SetPuzzleDiary(puzzleDiaryList[e], e);
+            puzzle.SetPuzzleDiary(e);
         }
     }
-    private void CreatePuzzleGroup(List<PuzzleGroup> puzzleGroup)
+    private void CreatePuzzleGroup()
     {
         // Grupların içindeki btonları oluştur
-        for (int e = 0; e < puzzleGroup.Count; e++)
+        for (int e = 0; e < Save_Load_Manager.Instance.gameData.puzzleGroup.Count; e++)
         {
             // Tüm grpları oluştur
             Transform puzzleContainer = Instantiate(prefabPuzzleContainer, puzzleAllParent);
-            puzzleContainer.GetComponentInChildren<TextMeshProUGUI>().text = puzzleGroup[e].myName;
+            puzzleContainer.GetComponentInChildren<TextMeshProUGUI>().text = Save_Load_Manager.Instance.gameData.puzzleGroup[e].groupName;
             Transform puzzleParent = puzzleContainer.GetChild(1);
 
-            for (int h = 0; h < puzzleGroup[e].puzzleGroupList.Count; h++)
+            for (int h = 0; h < Save_Load_Manager.Instance.gameData.puzzleGroup[e].puzzleGroupList.Count; h++)
             {
                 Puzzle_Group puzzle = Instantiate(prefabPuzzle_Group, puzzleParent);
-                puzzle.SetPuzzleGroup(puzzleGroup[e].puzzleGroupList[h], e, h);
+                puzzle.SetPuzzleGroup(Save_Load_Manager.Instance.gameData.puzzleGroup[e].puzzleGroupList[h], e, h);
             }
         }
     }
@@ -198,8 +223,10 @@ public class Canvas_Manager : Singletion<Canvas_Manager>
             puzzleGroupList[i].gameObject.SetActive(true);
             puzzleGroupList[i].SetPuzzleSingle(puzzleGroupPart.puzzleSingle[i], order, partOrder, i);
         }
+        groupOrder = order;
+        groupPartOrder = partOrder;
 
-        textPuzzleGroupName.text = puzzleGroupPart.myName;
+        textPuzzleGroupName.text = puzzleGroupPart.groupPartName;
         if (puzzleGroupPart.myNewPrice == 0)
         {
             textPuzzleGroupPrice.text = "Free";
@@ -215,12 +242,12 @@ public class Canvas_Manager : Singletion<Canvas_Manager>
     // Canvas -> Puzzle-Group-List -> Panel-Title -> Button-Buy butonuna eklendi
     public void BuyGroupPart()
     {
-        int price = int.Parse(textPuzzleGroupPrice.text);
-        if (Save_Load_Manager.Instance.gameData.gold < price)
+        if (Save_Load_Manager.Instance.gameData.gold < Save_Load_Manager.Instance.gameData.puzzleGroup[groupOrder].puzzleGroupList[groupPartOrder].myNewPrice)
         {
+            Warning_Manager.Instance.ShowMessage("You dont have enough Gold.", 2);
             return;
         }
-        Save_Load_Manager.Instance.gameData.gold -= price;
+        Save_Load_Manager.Instance.gameData.gold -= Save_Load_Manager.Instance.gameData.puzzleGroup[groupOrder].puzzleGroupList[groupPartOrder].myNewPrice;
         textGoldAmount.text = Save_Load_Manager.Instance.gameData.gold.ToString();
 
         for (int e = 0; e < Save_Load_Manager.Instance.gameData.puzzleGroup[groupOrder].puzzleGroupList[groupPartOrder].puzzleSingle.Count; e++)
@@ -237,15 +264,15 @@ public class Canvas_Manager : Singletion<Canvas_Manager>
         }
 
         objPuzzleGroupBuy.SetActive(false);
+        Save_Load_Manager.Instance.SaveGame();
     }
-    public void ShowPuzzleSetting(Sprite mySprite, bool isVideo, int order = -1, int partOrder = -1, int single = -1)
+    public void ShowPuzzleSetting(Texture2D myTexture2D, bool isVideo, int order = -1, int partOrder = -1, int single = -1)
     {
         objStartPuzzle.SetActive(true);
 
         objIsVideo.SetActive(isVideo);
-        imagePuzzleIcon.sprite = mySprite;
-        imageGameMiniIcon.sprite = mySprite;
-        puzzleSprite.sprite = mySprite;
+        imagePuzzleIcon.texture = myTexture2D;
+        imageGameMiniIcon.texture = myTexture2D;
         this.isVideo = isVideo;
 
         textPuzzleReward.text = (Save_Load_Manager.Instance.gameData.pieceAmount * rewardMulti).ToString();
@@ -262,7 +289,7 @@ public class Canvas_Manager : Singletion<Canvas_Manager>
         buttonPieceCanDontTurn.interactable = Save_Load_Manager.Instance.gameData.canTurnPiece;
     }
     // Canvas -> Show-Puzzle-Setting -> Piece-Parent -> Button-Piece-Amount butonlarına eklendi
-    public void SetPieceAmont(int pieceAmont)
+    private void SetPieceAmont(int pieceAmont)
     {
         Save_Load_Manager.Instance.gameData.pieceAmount = pieceAmont;
         textPuzzleReward.text = pieceAmont.ToString();
@@ -277,7 +304,7 @@ public class Canvas_Manager : Singletion<Canvas_Manager>
     {
         if (isVideo)
         {
-            // Reklam izle
+            // Reklam izle ve alttaki fonksiyonu çalıştır. Sistem olmadığı için biz direk çalıştırıyoruz.
             OpenPuzzle();
             return;
         }
@@ -316,16 +343,19 @@ public class Canvas_Manager : Singletion<Canvas_Manager>
         objGroupList.SetActive(false);
         objStartPuzzle.SetActive(false);
         puzzleAllContainer.SetActive(false);
+        SetBackground(Save_Load_Manager.Instance.gameData.backgroundOrder);
 
+        Texture2D texture = null;
         if (singleOrder == -1)
         {
-            Game_Manager.Instance.StartPuzzle(Save_Load_Manager.Instance.gameData.puzzleDiary[groupOrder].mySprite);
+            texture = Save_Load_Manager.Instance.gameData.puzzleDiary[groupOrder].myTexture;
         }
         else
         {
-            Game_Manager.Instance.StartPuzzle(Save_Load_Manager.Instance.gameData.puzzleGroup[groupOrder].puzzleGroupList[groupPartOrder].puzzleSingle[singleOrder].mySprite);
+            texture = Save_Load_Manager.Instance.gameData.puzzleGroup[groupOrder].puzzleGroupList[groupPartOrder].puzzleSingle[singleOrder].myTexture;
         }
-
+        Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
+        Game_Manager.Instance.StartPuzzle(sprite);
     }
     public void PuzzleFinish()
     {
@@ -337,13 +367,14 @@ public class Canvas_Manager : Singletion<Canvas_Manager>
         if (singleOrder == -1)
         {
             Save_Load_Manager.Instance.gameData.puzzleDiary[groupOrder].isFixed = true;
+            puzzleSpriteIcon.texture = Save_Load_Manager.Instance.gameData.puzzleDiary[groupOrder].myTexture;
             puzzleAllParent.GetChild(0).GetChild(1).Find("Image-Video").gameObject.SetActive(false);
         }
         else
         {
+            puzzleSpriteIcon.texture = Save_Load_Manager.Instance.gameData.puzzleGroup[groupOrder].puzzleGroupList[groupPartOrder].puzzleSingle[singleOrder].myTexture;
             Save_Load_Manager.Instance.gameData.puzzleGroup[groupOrder].puzzleGroupList[groupPartOrder].puzzleSingle[singleOrder].isFixed = true;
         }
-
         IncreaseGold(Save_Load_Manager.Instance.gameData.pieceAmount * rewardMulti);
 
         // Group puzzle ise group partın price düşülsün ve amountu düşsün
@@ -353,7 +384,7 @@ public class Canvas_Manager : Singletion<Canvas_Manager>
     {
         Transform puzzleGroup = puzzleAllParent.GetChild(groupOrder + 1).GetChild(1).GetChild(groupPartOrder);
         Puzzle_Group puzzle_Group = puzzleGroup.GetComponentInChildren<Puzzle_Group>(true);
-        puzzle_Group.SetText();
+        puzzle_Group.SetAmountText();
     }
     // Canvas -> Puzzle-Game-Parent -> Menu-Parent -> Menu-Setting-Parent -> Button-Edges butonuna eklendi
     public void PuzzleSetFirstEdge()
@@ -400,7 +431,7 @@ public class Canvas_Manager : Singletion<Canvas_Manager>
         {
             edgePiece.Remove(piece);
             // yan menuden çıkarıp, game panele aktar
-            piece.transform.parent.SetParent(puzzleGameArea);
+            piece.transform.parent.SetParent(imageGameBackground.transform);
             return true;
         }
         return false;

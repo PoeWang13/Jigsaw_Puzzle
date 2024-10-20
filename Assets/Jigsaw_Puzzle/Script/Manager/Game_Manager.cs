@@ -35,6 +35,7 @@ public class Game_Manager : Singletion<Game_Manager>
     [SerializeField] private GridLayoutGroup layoutGroup;
     [SerializeField] private Image imagePuzzle;
     [SerializeField] private float waitingDelay;
+    [SerializeField] private GameObject onlineController;
 
     private float closeDistance;
     private Vector2 myParentEdgeScale;
@@ -47,8 +48,10 @@ public class Game_Manager : Singletion<Game_Manager>
     private int hour;
     private float gameTimeNext;
     private bool gameStart;
+    private bool areWeOnline;
     private Board[,] board;
     private List<Piece> allPieces = new List<Piece>();
+    public bool AreWeOnline { get { return areWeOnline; } }
     public string GameTime { get { return hour + " : " + minute + " : " + second; } }
     public float CloseDistance { get { return closeDistance; } }
     public Vector2 MyParentEdgeScale { get { return myParentEdgeScale; } }
@@ -56,6 +59,32 @@ public class Game_Manager : Singletion<Game_Manager>
     public override void OnAwake()
     {
         toolTipCanvas = GetComponentInChildren<Canvas>();
+        CheckAreWeOnline();
+    }
+    private bool CheckAreWeOnline()
+    {
+        // Internet var mı?
+        if (Application.internetReachability == NetworkReachability.ReachableViaLocalAreaNetwork)
+        {
+            //Debug.Log("İnternet adsl ile var.");
+            SetOnlineController(true);
+        }
+        else if (Application.internetReachability == NetworkReachability.ReachableViaCarrierDataNetwork)
+        {
+            //Debug.Log("İnternet telefon hattı ile var.");
+            SetOnlineController(true);
+        }
+        else if (Application.internetReachability == NetworkReachability.NotReachable)
+        {
+            //Debug.Log("İnternet yok.");
+            SetOnlineController(false);
+        }
+        return areWeOnline;
+    }
+    private void SetOnlineController(bool online)
+    {
+        areWeOnline = online;
+        onlineController.SetActive(!areWeOnline);
     }
     private void Update()
     {
@@ -65,6 +94,10 @@ public class Game_Manager : Singletion<Game_Manager>
             if (gameTimeNext > 1)
             {
                 gameTimeNext--;
+                if (!CheckAreWeOnline())
+                {
+                    return;
+                }
                 second++;
                 if (second == 60)
                 {
@@ -119,7 +152,8 @@ public class Game_Manager : Singletion<Game_Manager>
         }
         if (isFinished)
         {
-            Debug.Log("Puzzle Finished.");
+            gameStart = false;
+            Canvas_Manager.Instance.PuzzleFinish();
         }
     }
 
@@ -253,9 +287,14 @@ public class Game_Manager : Singletion<Game_Manager>
                                     // Remismleri karıştır ve holdera ekle
                                     while (pieces.Count > 0)
                                     {
-                                        int rnd = Random.Range(0, pieces.Count);
-                                        Canvas_Manager.Instance.AddPuzzlePieceToHolder(pieces[rnd]);
-                                        pieces.RemoveAt(rnd);
+                                        int rndPiece = Random.Range(0, pieces.Count);
+                                        Canvas_Manager.Instance.AddPuzzlePieceToHolder(pieces[rndPiece]);
+                                        if (Save_Load_Manager.Instance.gameData.canTurnPiece)
+                                        {
+                                            int rndAngle = Random.Range(0, 4);
+                                            pieces[rndPiece].transform.Rotate(Vector3.back * 90 * rndAngle);
+                                        }
+                                        pieces.RemoveAt(rndPiece);
                                     }
                                 });
                             });

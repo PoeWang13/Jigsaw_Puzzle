@@ -1,42 +1,12 @@
 ﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections.Generic;
 
-[System.Serializable]
-public class PuzzleGroup
-{
-    public string myName;
-    public List<PuzzleGroupPart> puzzleGroupList = new List<PuzzleGroupPart>();
-
-    public PuzzleGroup(string myName, List<PuzzleGroupPart> puzzleList)
-    {
-        this.myName = myName;
-        this.puzzleGroupList = puzzleList;
-    }
-}
-[System.Serializable]
-public class PuzzleGroupPart
-{
-    public int myPrice;
-    public int myNewPrice;
-    public string myName;
-    public Sprite mySprite;
-    public List<PuzzleSingle> puzzleSingle = new List<PuzzleSingle>();
-
-    public PuzzleGroupPart(int myPrice, string myName, Sprite mySprite, List<PuzzleSingle> puzzleSingle)
-    {
-        this.myPrice = myPrice;
-        this.myName = myName;
-        this.mySprite = mySprite;
-        this.puzzleSingle = puzzleSingle;
-    }
-}
 public class Puzzle_Group : MonoBehaviour
 {
     private int groupOrder;
     private int groupPartOrder;
-    private Image myImage;
+    private RawImage myImage;
     private TextMeshProUGUI textPuzzlePrice;
     private TextMeshProUGUI textPuzzleAmount;
     private TextMeshProUGUI textPuzzleName;
@@ -44,50 +14,63 @@ public class Puzzle_Group : MonoBehaviour
 
     public void SetPuzzleGroup(PuzzleGroupPart groupPart, int order, int partOrder)
     {
-        myImage = GetComponent<Image>();
+        myImage = GetComponent<RawImage>();
         textPuzzleName = transform.Find("Panel-Name").Find("Text-Name").GetComponent<TextMeshProUGUI>();
-        textPuzzlePrice = transform.Find("Panel-Price").Find("Text-Price").GetComponent<TextMeshProUGUI>();
         textPuzzleAmount = transform.Find("Panel-Amount").Find("Text-Amount").GetComponent<TextMeshProUGUI>();
-
+        Transform price = transform.Find("Panel-Price");
         puzzleGroupPart = groupPart;
         groupOrder = order;
         groupPartOrder = partOrder;
-        myImage.sprite = puzzleGroupPart.mySprite;
-        textPuzzleAmount.text = puzzleGroupPart.puzzleSingle.ToString();
-        textPuzzleName.text = puzzleGroupPart.myName;
-
-        SetText();
-    }
-    public void SetText()
-    {
-        int puzzleFix = 0;
-        int puzzleVideo = 0;
-        int puzzlePrice = puzzleGroupPart.myPrice;
-        int puzzlePricePart = puzzleGroupPart.myPrice / puzzleGroupPart.puzzleSingle.Count;
-        for (int e = 0; e < puzzleGroupPart.puzzleSingle.Count; e++)
+        textPuzzleName.text = puzzleGroupPart.groupPartName;
+        if (groupPart.myNewPrice == 0)
         {
-            if (!puzzleGroupPart.puzzleSingle[e].isVideo)
-            {
-                puzzlePrice -= puzzlePricePart;
-                puzzleVideo++;
-            }
-            if (puzzleGroupPart.puzzleSingle[e].isFixed)
-            {
-                puzzleFix++;
-            }
-        }
-        if (puzzleVideo == puzzleGroupPart.puzzleSingle.Count)
-        {
-            puzzleGroupPart.myNewPrice = 0;
-            textPuzzlePrice.text = "";
+            price.gameObject.SetActive(false);
         }
         else
         {
-            puzzleGroupPart.myNewPrice = puzzlePrice;
-            string price = puzzleGroupPart.myNewPrice.ToString() + " ";
-            textPuzzlePrice.text = price;
+            textPuzzlePrice = price.Find("Text-Price").GetComponent<TextMeshProUGUI>();
+            SetPriceText();
         }
-        textPuzzleAmount.text = " " + puzzleFix + " / " + puzzleGroupPart.puzzleSingle.Count;
+        SetAmountText();
+    }
+    private void Update()
+    {
+        if (myImage.texture != null)
+        {
+            return;
+        }
+        if (puzzleGroupPart.puzzleSingle[0].myTexture == null)
+        {
+            return;
+        }
+        myImage.texture = puzzleGroupPart.puzzleSingle[0].myTexture;
+    }
+    public void SetPriceText()
+    {
+        int puzzleVideo = 0;
+        int puzzlePrice = 0;
+        for (int e = 0; e < puzzleGroupPart.puzzleSingle.Count; e++)
+        {
+            if (puzzleGroupPart.puzzleSingle[e].isVideo)
+            {
+                puzzleVideo++;
+            }
+        }
+        puzzlePrice = (puzzleGroupPart.myOrjPrice / puzzleGroupPart.puzzleSingle.Count) * puzzleVideo;
+        puzzleGroupPart.myNewPrice = puzzlePrice;
+        textPuzzlePrice.text = puzzlePrice.ToString();
+    }
+    public void SetAmountText()
+    {
+        int puzzleFixed = 0;
+        for (int e = 0; e < puzzleGroupPart.puzzleSingle.Count; e++)
+        {
+            if (puzzleGroupPart.puzzleSingle[e].isFixed)
+            {
+                puzzleFixed++;
+            }
+        }
+        textPuzzleAmount.text = " " + puzzleFixed + " / " + puzzleGroupPart.puzzleSingle.Count;
     }
     // Puzzle-Group prefabinde buttona atandı.
     public void ShowAllSinglePuzzle()

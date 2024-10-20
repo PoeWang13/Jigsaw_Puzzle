@@ -10,8 +10,10 @@ public class Piece : MonoBehaviour, IBeginDragHandler, IDropHandler, IDragHandle
     [SerializeField] private RectTransform myParentRect;
 
     private float closeDistance;
+    private float clickTimeNext;
     private bool isStuck;
     private bool isEdge;
+    private bool inMenu;
     private Vector2 myParentEdgeScale;
 
     private Vector2 myPos;
@@ -21,9 +23,36 @@ public class Piece : MonoBehaviour, IBeginDragHandler, IDropHandler, IDragHandle
     public bool IsStuck { get { return isStuck; } }
     public bool IsEdge { get { return isEdge; } }
 
+    private void Update()
+    {
+        if (isStuck)
+        {
+            // Piece yerinde
+            return;
+        }
+        if (inMenu)
+        {
+            // Piece kenarda
+            return;
+        }
+        if (Input.GetMouseButtonUp(0))
+        {
+            if (clickTimeNext < 0.25f)
+            {
+                // Double click yapıldı.
+                if (Save_Load_Manager.Instance.gameData.canTurnPiece)
+                {
+                    transform.Rotate(Vector3.back * 90);
+                }
+            }
+            clickTimeNext = 0;
+        }
+        clickTimeNext += Time.deltaTime;
+    }
     public void SetPiece(Sprite sprite, bool edge, Vector2Int coor)
     {
         isEdge = edge;
+        inMenu = true;
         myCoor = coor;
         myImage.sprite = sprite;
 
@@ -67,7 +96,7 @@ public class Piece : MonoBehaviour, IBeginDragHandler, IDropHandler, IDragHandle
         {
             if (eventData.button == PointerEventData.InputButton.Left)
             {
-                if (IsStuck)
+                if (isStuck)
                 {
                     return;
                 }
@@ -78,9 +107,11 @@ public class Piece : MonoBehaviour, IBeginDragHandler, IDropHandler, IDragHandle
                 // Yan menuden çıkart
                 if (Canvas_Manager.Instance.RemovePuzzlePieceFromHolder(this))
                 {
+                    inMenu = false;
                     // Orj size yap
                     SetPieceSizeForEdge(false);
                 }
+                transform.parent.SetAsLastSibling();
                 Game_Manager.Instance.SetMovingPiece(myParentRect);
             }
         }
@@ -93,6 +124,7 @@ public class Piece : MonoBehaviour, IBeginDragHandler, IDropHandler, IDragHandle
             if (myParentRect.anchoredPosition.x < 0)
             {
                 // Holdera koy
+                inMenu = true;
                 Canvas_Manager.Instance.AddPuzzlePieceToHolder(this);
                 Game_Manager.Instance.SetMovingPiece(null);
                 return;
@@ -106,14 +138,21 @@ public class Piece : MonoBehaviour, IBeginDragHandler, IDropHandler, IDragHandle
     {
         if (Vector2.SqrMagnitude(myPos - myParentRect.anchoredPosition) < closeDistance)
         {
-            myParentRect.DOAnchorPos(myPos, 0.25f);
-            isStuck = true;
-            Game_Manager.Instance.CheckPuzzle();
+            if (transform.eulerAngles.z == 0)
+            {
+                myParentRect.DOAnchorPos(myPos, 0.25f);
+                isStuck = true;
+                inMenu = true;
+                myImage.raycastTarget = false;
+                transform.parent.SetAsFirstSibling();
+                Game_Manager.Instance.CheckPuzzle();
+            }
         }
         else
         {
             if (checkNeighbor)
             {
+                // Komsularla yakınlık kontrolu yap.
                 Game_Manager.Instance.IsPieceConnectNeighbor(this, myCoor);
             }
         }

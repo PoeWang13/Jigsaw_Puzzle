@@ -1,26 +1,12 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-[System.Serializable]
-public class PuzzleSingle
-{
-    public bool isVideo;
-    public bool isFixed;
-    public Sprite mySprite;
-
-    public PuzzleSingle(bool isVideo, bool isFixed, Sprite mySprite)
-    {
-        this.isVideo = isVideo;
-        this.isFixed = isFixed;
-        this.mySprite = mySprite;
-    }
-}
 public class Puzzle_Single : MonoBehaviour
 {
     private int groupOrder;
     private int groupPartOrder;
     private int singleOrder;
-    private Image myImage;
+    private RawImage myImage;
     private GameObject puzzleFixed;
     private GameObject puzzleVideo;
     private PuzzleSingle puzzleSingle;
@@ -29,7 +15,7 @@ public class Puzzle_Single : MonoBehaviour
     {
         if (puzzleFixed is null)
         {
-            myImage = GetComponent<Image>();
+            myImage = GetComponent<RawImage>();
             puzzleFixed = transform.Find("Image-Fixed").gameObject;
             puzzleVideo = transform.Find("Image-Video").gameObject;
         }
@@ -38,7 +24,7 @@ public class Puzzle_Single : MonoBehaviour
         groupOrder = order;
         groupPartOrder = partOrder;
         singleOrder = single;
-        myImage.sprite = puzzleSingle.mySprite;
+        myImage.texture = null;
         puzzleVideo.SetActive(puzzleSingle.isVideo);
         puzzleFixed.SetActive(puzzleSingle.isFixed);
     }
@@ -49,6 +35,20 @@ public class Puzzle_Single : MonoBehaviour
     // Puzzle-Single prefabinde buttona atandı.
     public void StartPuzzle()
     {
-        Canvas_Manager.Instance.ShowPuzzleSetting(myImage.sprite, puzzleSingle.isVideo, groupOrder, groupPartOrder, singleOrder);
+        if (myImage.texture == null)
+        {
+            Warning_Manager.Instance.ShowMessage("This puzzle not ready...", 2);
+        }
+        else
+        {
+            Canvas_Manager.Instance.ShowPuzzleSetting(puzzleSingle.myTexture, puzzleSingle.isVideo, groupOrder, groupPartOrder, singleOrder);
+        }
+    }
+    private void Update()
+    {
+        if (myImage.texture == null)
+        {
+            myImage.texture = puzzleSingle.myTexture;
+        }
     }
 }

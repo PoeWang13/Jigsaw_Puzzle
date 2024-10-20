@@ -2,43 +2,47 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-[System.Serializable]
-public class PuzzleDiary : PuzzleSingle
-{
-    public string myDate;
-
-    public PuzzleDiary (bool isVideo, bool isFixed, Sprite mySprite, string myDate) : base (isVideo, isFixed, mySprite)
-    {
-        this.myDate = myDate;
-    }
-}
 public class Puzzle_Diary : MonoBehaviour
 {
-    private Image myImage;
+    private RawImage myImage;
     private int diaryOrder;
     private GameObject puzzleFixed;
     private GameObject puzzleVideo;
     private TextMeshProUGUI textPuzzleDate;
     private PuzzleDiary puzzleDiary;
 
-    public void SetPuzzleDiary(PuzzleDiary diary, int order)
+    public void SetPuzzleDiary(int order)
     {
-        myImage = GetComponent<Image>();
+        myImage = GetComponent<RawImage>();
         puzzleFixed = transform.Find("Image-Fixed").gameObject;
         puzzleVideo = transform.Find("Image-Video").gameObject;
         textPuzzleDate = transform.Find("Panel-Date").Find("Text-Date").GetComponent<TextMeshProUGUI>();
 
-        puzzleDiary = diary;
+        puzzleDiary = Save_Load_Manager.Instance.gameData.puzzleDiary[order];
         diaryOrder = order;
-        myImage.sprite = puzzleDiary.mySprite;
-        string price = puzzleDiary.myDate + " ";
-        textPuzzleDate.text = price;
+        myImage.texture = null;
+        string myDate = " " + puzzleDiary.myDate + " ";
+        textPuzzleDate.text = myDate;
         puzzleVideo.SetActive(puzzleDiary.isVideo);
         puzzleFixed.SetActive(puzzleDiary.isFixed);
     }
     // Puzzle-Diary prefabinde buttona atandı.
     public void StartPuzzle()
     {
-        Canvas_Manager.Instance.ShowPuzzleSetting(myImage.sprite, puzzleDiary.isVideo, diaryOrder);
+        if (myImage.texture == null)
+        {
+            Warning_Manager.Instance.ShowMessage("This puzzle not ready...", 2);
+        }
+        else
+        {
+            Canvas_Manager.Instance.ShowPuzzleSetting(puzzleDiary.myTexture, puzzleDiary.isVideo, diaryOrder);
+        }
+    }
+    private void Update()
+    {
+        if (myImage.texture == null)
+        {
+            myImage.texture = puzzleDiary.myTexture;
+        }
     }
 }

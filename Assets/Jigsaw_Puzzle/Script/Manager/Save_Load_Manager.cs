@@ -3,35 +3,78 @@ using System.IO;
 using UnityEngine;
 using System.Collections.Generic;
 
-[System.Serializable]
+[Serializable]
 public class PuzzleBackground
 {
     public int isPrice;
     public bool isOpen;
-    public bool isVideo;
-    public Sprite puzzleBackground;
+    public Texture2D myTexture;
 
-    public PuzzleBackground(int iPrice, bool isVideo, bool isOpen, Sprite puzzleBackground)
+    public PuzzleBackground()
     {
-        this.isPrice = iPrice;
-        this.isVideo = isVideo;
-        this.isOpen = isOpen;
-        this.puzzleBackground = puzzleBackground;
     }
-    public PuzzleBackground(PuzzleBackground background)
+}
+[Serializable]
+public class PuzzleGroup
+{
+    public string groupName;
+    public List<PuzzleGroupPart> puzzleGroupList = new List<PuzzleGroupPart>();
+
+    public PuzzleGroup(string myName)
     {
-        isPrice = background.isPrice;
-        isVideo = background.isVideo;
-        isOpen = background.isOpen;
-        puzzleBackground = background.puzzleBackground;
+        this.groupName = myName;
+    }
+}
+[Serializable]
+public class PuzzleGroupPart
+{
+    public int myOrjPrice;
+    public int myNewPrice;
+    public string groupPartName;
+    public List<PuzzleSingle> puzzleSingle = new List<PuzzleSingle>();
+
+    public PuzzleGroupPart(int myOrjPrice, string myName)
+    {
+        this.myOrjPrice = myOrjPrice;
+        this.myNewPrice = myOrjPrice;
+        this.groupPartName = myName;
+    }
+}
+[Serializable]
+public class PuzzleDiary : PuzzleSingle
+{
+    public string myDate;
+    public PuzzleDiary(bool isVideo, Texture2D myTexture, string myDate) : base(isVideo, myTexture)
+    {
+        this.myDate = myDate;
+        this.isVideo = isVideo;
+        this.myTexture = myTexture;
+    }
+}
+[Serializable]
+public class PuzzleSingle
+{
+    public bool isVideo;
+    public bool isFixed;
+    public Texture2D myTexture;
+
+    public PuzzleSingle()
+    {
+    }
+    public PuzzleSingle(bool isVideo, Texture2D myTexture)
+    {
+        this.isVideo = isVideo;
+        this.myTexture = myTexture;
     }
 }
 [Serializable]
 public class GameData
 {
-    public bool canTurnPiece;
     public int gold;
+    public int myLastDate = 0;
     public int pieceAmount = 35;
+    public int backgroundOrder = 0;
+    public bool canTurnPiece;
     public List<PuzzleDiary> puzzleDiary = new List<PuzzleDiary>();
     public List<PuzzleGroup> puzzleGroup = new List<PuzzleGroup>();
     public List<PuzzleBackground> puzzleBackground = new List<PuzzleBackground>();
@@ -50,8 +93,6 @@ public class Save_Load_Manager : Singletion<Save_Load_Manager>
     private Save_Load_File_Data_Handler save_Load_File_Data_Handler;
     public override void OnAwake()
     {
-
-        //gameData.playerData.playerActivitedChest.chestTime.AddSeconds(-1);
         DontDestroyOnLoad(gameObject);
         if (string.IsNullOrEmpty(fileName))
         {
