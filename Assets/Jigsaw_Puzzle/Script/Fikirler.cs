@@ -436,6 +436,17 @@ public class Fikirler : MonoBehaviour
      * -
      * -
      * -
+     * 40-Mücevherler
+     * -
+     * -
+     * -
+     * -
+     * -
+     * -
+     * -
+     * -
+     * -
+     * -
      * 
      */
 }

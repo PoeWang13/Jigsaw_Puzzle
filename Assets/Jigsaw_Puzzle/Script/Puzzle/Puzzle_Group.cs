@@ -6,7 +6,6 @@ public class Puzzle_Group : MonoBehaviour
 {
     private int groupOrder;
     private int groupPartOrder;
-    private RawImage myImage;
     private TextMeshProUGUI textPuzzlePrice;
     private TextMeshProUGUI textPuzzleAmount;
     private TextMeshProUGUI textPuzzleName;
@@ -14,7 +13,6 @@ public class Puzzle_Group : MonoBehaviour
 
     public void SetPuzzleGroup(PuzzleGroupPart groupPart, int order, int partOrder)
     {
-        myImage = GetComponent<RawImage>();
         textPuzzleName = transform.Find("Panel-Name").Find("Text-Name").GetComponent<TextMeshProUGUI>();
         textPuzzleAmount = transform.Find("Panel-Amount").Find("Text-Amount").GetComponent<TextMeshProUGUI>();
         Transform price = transform.Find("Panel-Price");
@@ -33,17 +31,25 @@ public class Puzzle_Group : MonoBehaviour
         }
         SetAmountText();
     }
-    private void Update()
+    public void SetPuzzleGroup(int order, int partOrder)
     {
-        if (myImage.texture != null)
+        textPuzzleName = transform.Find("Panel-Name").Find("Text-Name").GetComponent<TextMeshProUGUI>();
+        textPuzzleAmount = transform.Find("Panel-Amount").Find("Text-Amount").GetComponent<TextMeshProUGUI>();
+        Transform price = transform.Find("Panel-Price");
+        groupOrder = order;
+        groupPartOrder = partOrder;
+        puzzleGroupPart = Save_Load_Manager.Instance.gameData.puzzleGroup[groupOrder].puzzleGroupList[groupPartOrder];
+        textPuzzleName.text = puzzleGroupPart.groupPartName;
+        if (puzzleGroupPart.myNewPrice == 0)
         {
-            return;
+            price.gameObject.SetActive(false);
         }
-        if (puzzleGroupPart.puzzleSingle[0].myTexture == null)
+        else
         {
-            return;
+            textPuzzlePrice = price.Find("Text-Price").GetComponent<TextMeshProUGUI>();
+            SetPriceText();
         }
-        myImage.texture = puzzleGroupPart.puzzleSingle[0].myTexture;
+        SetAmountText();
     }
     public void SetPriceText()
     {

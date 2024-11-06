@@ -43,6 +43,7 @@ public class Canvas_Manager : Singletion<Canvas_Manager>
     [SerializeField] private GameObject objPuzzleGame;
     [SerializeField] private RawImage puzzleSpriteIcon;
     [SerializeField] private Transform puzzleBackgroundParent;
+    [SerializeField] private Puzzle_Background prefabPuzzleBackground;
     [SerializeField] private TextMeshProUGUI textFinishGoldAmount;
     [SerializeField] private TextMeshProUGUI textFinishIncreaseAmount;
     [SerializeField] private TextMeshProUGUI textFinishTime;
@@ -81,9 +82,6 @@ public class Canvas_Manager : Singletion<Canvas_Manager>
             }
             // Background butonları ayarla
             SetBackgroundButton();
-
-            // Puzzle Diary'leri ayarla
-            CreatePuzzleDiary();
 
             // Puzzle Group'larını ayarla
             CreatePuzzleGroup();
@@ -134,14 +132,20 @@ public class Canvas_Manager : Singletion<Canvas_Manager>
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
     #endregion
+
     private void SetBackgroundButton()
     {
-        puzzleBackgroundParent.GetChild(0).GetComponent<Puzzle_Background>().SetPuzzleBackground(0);
-        for (int e = 1; e < Save_Load_Manager.Instance.gameData.puzzleBackground.Count; e++)
-        {
-            Transform back = Instantiate(puzzleBackgroundParent.GetChild(0), puzzleBackgroundParent);
-            back.GetComponent<Puzzle_Background>().SetPuzzleBackground(e);
-        }
+        //puzzleBackgroundParent.GetChild(0).GetComponent<Puzzle_Background>().SetPuzzleBackground(0);
+        //for (int e = 1; e < Save_Load_Manager.Instance.gameData.puzzleBackground.Count; e++)
+        //{
+        //    Transform back = Instantiate(puzzleBackgroundParent.GetChild(0), puzzleBackgroundParent);
+        //    back.GetComponent<Puzzle_Background>().SetPuzzleBackground(e);
+        //}
+    }
+    public Puzzle_Background SetBackgroundButton(int order)
+    {
+        Puzzle_Background back = Instantiate(prefabPuzzleBackground, puzzleBackgroundParent);
+        return back;
     }
     public bool BuyBackground(int order)
     {
@@ -166,39 +170,39 @@ public class Canvas_Manager : Singletion<Canvas_Manager>
         Save_Load_Manager.Instance.gameData.backgroundOrder = order;
         puzzleBackgroundParent.parent.gameObject.SetActive(false);
     }
-    private void CreatePuzzleDiary()
+    public Puzzle_Diary CreatePuzzleDiarySprite()
     {
-        Transform puzzleContainer = Instantiate(prefabPuzzleContainer, puzzleAllParent);
-        puzzleContainer.GetComponentInChildren<TextMeshProUGUI>().text = "Diary Puzzle";
-        RectTransform rectContainer = puzzleContainer.GetComponent<RectTransform>();
-        rectContainer.sizeDelta = new Vector2(rectContainer.sizeDelta.x, 260);
-
-        Transform puzzleParent = puzzleContainer.GetChild(1);
-        RectTransform rectParent = puzzleParent.GetComponent<RectTransform>();
-        rectParent.sizeDelta = new Vector2(rectParent.sizeDelta.x, 230);
-
-        for (int e = 0; e < Save_Load_Manager.Instance.gameData.puzzleDiary.Count; e++)
-        {
-            Puzzle_Diary puzzle = Instantiate(prefabPuzzle_Diary, puzzleParent);
-            puzzle.SetPuzzleDiary(e);
-        }
+        Puzzle_Diary puzzle = Instantiate(prefabPuzzle_Diary, puzzleAllParent.GetChild(0).GetChild(1));
+        return puzzle;
     }
     private void CreatePuzzleGroup()
     {
-        // Grupların içindeki btonları oluştur
-        for (int e = 0; e < Save_Load_Manager.Instance.gameData.puzzleGroup.Count; e++)
-        {
-            // Tüm grpları oluştur
-            Transform puzzleContainer = Instantiate(prefabPuzzleContainer, puzzleAllParent);
-            puzzleContainer.GetComponentInChildren<TextMeshProUGUI>().text = Save_Load_Manager.Instance.gameData.puzzleGroup[e].groupName;
-            Transform puzzleParent = puzzleContainer.GetChild(1);
+        //// Grupların içindeki btonları oluştur
+        //for (int e = 0; e < Save_Load_Manager.Instance.gameData.puzzleGroup.Count; e++)
+        //{
+        //    // Tüm grpları oluştur
+        //    Transform puzzleContainer = Instantiate(prefabPuzzleContainer, puzzleAllParent);
+        //    puzzleContainer.GetComponentInChildren<TextMeshProUGUI>().text = Save_Load_Manager.Instance.gameData.puzzleGroup[e].groupName;
+        //    Transform puzzleParent = puzzleContainer.GetChild(1);
 
-            for (int h = 0; h < Save_Load_Manager.Instance.gameData.puzzleGroup[e].puzzleGroupList.Count; h++)
-            {
-                Puzzle_Group puzzle = Instantiate(prefabPuzzle_Group, puzzleParent);
-                puzzle.SetPuzzleGroup(Save_Load_Manager.Instance.gameData.puzzleGroup[e].puzzleGroupList[h], e, h);
-            }
-        }
+        //    for (int h = 0; h < Save_Load_Manager.Instance.gameData.puzzleGroup[e].puzzleGroupList.Count; h++)
+        //    {
+        //        Puzzle_Group puzzle = Instantiate(prefabPuzzle_Group, puzzleParent);
+        //        puzzle.SetPuzzleGroup(Save_Load_Manager.Instance.gameData.puzzleGroup[e].puzzleGroupList[h], e, h);
+        //    }
+        //}
+    }
+    public Transform CreatePuzzleGroup1()
+    {
+        // Tüm grpları oluştur
+        Transform puzzleContainer = Instantiate(prefabPuzzleContainer, puzzleAllParent);
+        return puzzleContainer;
+    }
+    public Puzzle_Group CreatePuzzleGroupPart(Transform puzzleParent)
+    {
+        // Tüm grpları oluştur
+        Puzzle_Group puzzle = Instantiate(prefabPuzzle_Group, puzzleParent.GetChild(1));
+        return puzzle;
     }
     public void ShowAllSinglePuzzle(PuzzleGroupPart puzzleGroupPart, string puzzleFix, int order, int partOrder)
     {

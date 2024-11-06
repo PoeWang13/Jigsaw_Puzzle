@@ -4,14 +4,14 @@ using UnityEngine.UI;
 
 public class Puzzle_Diary : MonoBehaviour
 {
-    private RawImage myImage;
     private int diaryOrder;
+    private RawImage myImage;
     private GameObject puzzleFixed;
     private GameObject puzzleVideo;
-    private TextMeshProUGUI textPuzzleDate;
     private PuzzleDiary puzzleDiary;
+    private TextMeshProUGUI textPuzzleDate;
 
-    public void SetPuzzleDiary(int order)
+    private void SetPuzzle(int order)
     {
         myImage = GetComponent<RawImage>();
         puzzleFixed = transform.Find("Image-Fixed").gameObject;
@@ -20,11 +20,28 @@ public class Puzzle_Diary : MonoBehaviour
 
         puzzleDiary = Save_Load_Manager.Instance.gameData.puzzleDiary[order];
         diaryOrder = order;
-        myImage.texture = null;
+    }
+    public void SetPuzzleFullDiary(int order)
+    {
+        SetPuzzle(order);
+        myImage.texture = puzzleDiary.myTexture;
         string myDate = " " + puzzleDiary.myDate + " ";
         textPuzzleDate.text = myDate;
         puzzleVideo.SetActive(puzzleDiary.isVideo);
         puzzleFixed.SetActive(puzzleDiary.isFixed);
+    }
+    public void SetPuzzleSimpleDiary(int order)
+    {
+        SetPuzzle(order);
+        puzzleFixed.SetActive(false);
+    }
+    public void SetDate(string myDate)
+    {
+        textPuzzleDate.text = myDate + " ";
+    }
+    public void SetVideo(bool video)
+    {
+        puzzleVideo.SetActive(video);
     }
     // Puzzle-Diary prefabinde buttona atandı.
     public void StartPuzzle()
@@ -36,13 +53,6 @@ public class Puzzle_Diary : MonoBehaviour
         else
         {
             Canvas_Manager.Instance.ShowPuzzleSetting(puzzleDiary.myTexture, puzzleDiary.isVideo, diaryOrder);
-        }
-    }
-    private void Update()
-    {
-        if (myImage.texture == null)
-        {
-            myImage.texture = puzzleDiary.myTexture;
         }
     }
 }

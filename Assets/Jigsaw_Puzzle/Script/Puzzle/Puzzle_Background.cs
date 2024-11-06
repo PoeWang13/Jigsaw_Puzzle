@@ -4,8 +4,8 @@ using UnityEngine.UI;
 
 public class Puzzle_Background : MonoBehaviour
 {
-    private RawImage myImage;
     private int myOrder;
+    private RawImage myImage;
     private Transform panelPrice;
 
     public void SetPuzzleBackground(int order)
@@ -43,13 +43,6 @@ public class Puzzle_Background : MonoBehaviour
                     panelPrice.gameObject.SetActive(false);
                 }
             }
-        }
-    }
-    private void Update()
-    {
-        if (myImage.texture == null)
-        {
-            myImage.texture = Save_Load_Manager.Instance.gameData.puzzleBackground[myOrder].myTexture;
         }
     }
 }

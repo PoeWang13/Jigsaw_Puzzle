@@ -44,11 +44,4 @@ public class Puzzle_Single : MonoBehaviour
             Canvas_Manager.Instance.ShowPuzzleSetting(puzzleSingle.myTexture, puzzleSingle.isVideo, groupOrder, groupPartOrder, singleOrder);
         }
     }
-    private void Update()
-    {
-        if (myImage.texture == null)
-        {
-            myImage.texture = puzzleSingle.myTexture;
-        }
-    }
 }

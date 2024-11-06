@@ -10,8 +10,9 @@ public class PuzzleBackground
     public bool isOpen;
     public Texture2D myTexture;
 
-    public PuzzleBackground()
+    public PuzzleBackground(int isPrice)
     {
+        this.isPrice = isPrice;
     }
 }
 [Serializable]
@@ -41,17 +42,6 @@ public class PuzzleGroupPart
     }
 }
 [Serializable]
-public class PuzzleDiary : PuzzleSingle
-{
-    public string myDate;
-    public PuzzleDiary(bool isVideo, Texture2D myTexture, string myDate) : base(isVideo, myTexture)
-    {
-        this.myDate = myDate;
-        this.isVideo = isVideo;
-        this.myTexture = myTexture;
-    }
-}
-[Serializable]
 public class PuzzleSingle
 {
     public bool isVideo;
@@ -61,8 +51,23 @@ public class PuzzleSingle
     public PuzzleSingle()
     {
     }
+    public PuzzleSingle(Texture2D myTexture)
+    {
+        this.myTexture = myTexture;
+    }
     public PuzzleSingle(bool isVideo, Texture2D myTexture)
     {
+        this.isVideo = isVideo;
+        this.myTexture = myTexture;
+    }
+}
+[Serializable]
+public class PuzzleDiary : PuzzleSingle
+{
+    public string myDate;
+    public PuzzleDiary(bool isVideo, Texture2D myTexture, string myDate) : base(isVideo, myTexture)
+    {
+        this.myDate = myDate;
         this.isVideo = isVideo;
         this.myTexture = myTexture;
     }
