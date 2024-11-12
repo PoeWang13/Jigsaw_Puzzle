@@ -62,10 +62,10 @@ public class PuzzleSingle
     }
 }
 [Serializable]
-public class PuzzleDiary : PuzzleSingle
+public class PuzzleDaily : PuzzleSingle
 {
     public string myDate;
-    public PuzzleDiary(bool isVideo, Texture2D myTexture, string myDate) : base(isVideo, myTexture)
+    public PuzzleDaily(bool isVideo, Texture2D myTexture, string myDate) : base(isVideo, myTexture)
     {
         this.myDate = myDate;
         this.isVideo = isVideo;
@@ -75,18 +75,21 @@ public class PuzzleDiary : PuzzleSingle
 [Serializable]
 public class GameData
 {
-    public int gold;
-    public int myLastDate = 0;
-    public int pieceAmount = 35;
+    public int gold = 500;
+    public int myLastDate = -1;
+    public int pieceAmount = 60;
     public int backgroundOrder = 0;
     public bool canTurnPiece;
-    public List<PuzzleDiary> puzzleDiary = new List<PuzzleDiary>();
+    public List<PuzzleDaily> puzzleDiary = new List<PuzzleDaily>();
     public List<PuzzleGroup> puzzleGroup = new List<PuzzleGroup>();
     public List<PuzzleBackground> puzzleBackground = new List<PuzzleBackground>();
     public GameData()
     {
+        gold = 500;
+        myLastDate = -1;
+        pieceAmount = 60;
+        backgroundOrder = 0;
         canTurnPiece = false;
-        pieceAmount = 35;
     }
 }
 public class Save_Load_Manager : Singletion<Save_Load_Manager>
@@ -103,7 +106,7 @@ public class Save_Load_Manager : Singletion<Save_Load_Manager>
         {
             #if UNITY_2022_1_OR_NEWER
             Debug.LogError("Save_Load scriptinde fileName boş olamaz.");
-            UnityEditor.EditorApplication.isPaused = true;
+            //UnityEditor.EditorApplication.isPaused = true;
             #endif
             return;
         }

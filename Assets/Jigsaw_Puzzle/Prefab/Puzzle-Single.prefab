@@ -10,8 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 2929623257458110505}
   - component: {fileID: 605018625124832529}
-  - component: {fileID: 823372489162723211}
   - component: {fileID: 3063041893685059167}
+  - component: {fileID: 823372489162723211}
   - component: {fileID: 370462508518107058}
   m_Layer: 5
   m_Name: Puzzle-Single
@@ -49,6 +49,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4602863045517843164}
   m_CullTransparentMesh: 1
+--- !u!114 &3063041893685059167
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4602863045517843164}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad310307132935a48a2ff295ad98a67b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &823372489162723211
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -105,18 +117,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
---- !u!114 &3063041893685059167
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4602863045517843164}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ad310307132935a48a2ff295ad98a67b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &370462508518107058
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -137,7 +137,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Texture: {fileID: 0}
+  m_Texture: {fileID: 2800000, guid: f706d826c06f25c45815b2227c9fa1be, type: 3}
   m_UVRect:
     serializedVersion: 2
     x: 0

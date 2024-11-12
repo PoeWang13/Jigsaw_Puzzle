@@ -1,4 +1,5 @@
-﻿using System;
+﻿using TMPro;
+using System;
 using System.IO;
 using System.Net;
 using UnityEngine;
@@ -7,7 +8,7 @@ using System.Collections;
 using System.Globalization;
 using UnityEngine.Networking;
 using System.Collections.Generic;
-using TMPro;
+using UnityEngine.SceneManagement;
 
 public enum ImageType
 {
@@ -65,8 +66,12 @@ public class Download_Manager : Singletion<Download_Manager>
     [SerializeField] private List<DownloadHolder> downloadInfos = new List<DownloadHolder>();
     // RawImage+indirme linki + indirme yeri + indirme ismi
 
+    private bool downloadSprite = false;
     private bool downloadTime = false;
-    private int gameDataLearningDeneme = 10;
+    private bool diaryCall = false;
+    private bool groupCall = false;
+    private bool backgroundCall = false;
+    //private int gameDataLearningDeneme = 10;
     private string driveJsonLink = "1YFz7NyFlrjhHtJBISpbS8HXJUmFzx5bR";
     private string driveStartLink = "https://drive.google.com/uc?export=download&id=";
     private DateTime dateTime;
@@ -95,72 +100,103 @@ public class Download_Manager : Singletion<Download_Manager>
             Debug.Log(DateTime.Now);
         }
     }
-    [ContextMenu("Day Time1")]
-    private void DayTime1()
-    {
-        if (!File.Exists(Application.persistentDataPath + "/Diary"))
-        {
-            Directory.CreateDirectory(Application.persistentDataPath + "/Diary");
-        }
-        if (!File.Exists(Application.persistentDataPath + "/AllGroup"))
-        {
-            Directory.CreateDirectory(Application.persistentDataPath + "/AllGroup");
-        }
-    }
     IEnumerator GetGamesData(string url)
     {
-        gameDataLearningDeneme--;
-        if (gameDataLearningDeneme >= 0)
-        {
-            Debug.Log("Sprite Data almayı " + (10 - gameDataLearningDeneme) + " defadır deniyoruz.");
-            bool hataVar = false;
-            UnityWebRequest unityWebRequest = UnityWebRequest.Get(url);
+        Warning_Manager.Instance.ShowMessage("We are checking your sprite. Wait a second please...", 3);
+        //gameDataLearningDeneme--;
+        //if (gameDataLearningDeneme >= 0)
+        //{
+        //}
+        //bool hataVar = false;
+        UnityWebRequest unityWebRequest = UnityWebRequest.Get(url);
 
-            yield return unityWebRequest.SendWebRequest();
-            UnityWebRequest.Result result = unityWebRequest.result;
-            if (result == UnityWebRequest.Result.ConnectionError)
+        yield return unityWebRequest.SendWebRequest();
+        UnityWebRequest.Result result = unityWebRequest.result;
+        if (result == UnityWebRequest.Result.ConnectionError)
+        {
+            Debug.LogWarning("Bilgi gelmedi. Hata : " + unityWebRequest.error);
+        }
+        else
+        {
+            try
             {
-                Debug.LogWarning("Bilgi gelmedi. Hata : " + unityWebRequest.error);
-            }
-            else
-            {
-                try
+                if (!File.Exists(Application.persistentDataPath + "/Diary"))
                 {
-                    allSpriteDatas = JsonUtility.FromJson<SpriteDataContainer>(unityWebRequest.downloadHandler.text);
-                    if (!File.Exists(Application.persistentDataPath + "/Diary"))
-                    {
-                        Directory.CreateDirectory(Application.persistentDataPath + "/Diary");
-                    }
-                    if (!File.Exists(Application.persistentDataPath + "/AllGroup"))
-                    {
-                        Directory.CreateDirectory(Application.persistentDataPath + "/AllGroup");
-                    }
-                    if (!File.Exists(Application.persistentDataPath + "/Background"))
-                    {
-                        Directory.CreateDirectory(Application.persistentDataPath + "/Background");
-                    }
-                    DownloadDiarySprite();
-                    DownloadBackgroundSprite();
-                    DownloadAllGroupSprite();
+                    Directory.CreateDirectory(Application.persistentDataPath + "/Diary");
                 }
-                catch
+                if (!File.Exists(Application.persistentDataPath + "/AllGroup"))
                 {
-                    hataVar = true;
+                    Directory.CreateDirectory(Application.persistentDataPath + "/AllGroup");
                 }
+                if (!File.Exists(Application.persistentDataPath + "/Background"))
+                {
+                    Directory.CreateDirectory(Application.persistentDataPath + "/Background");
+                }
+                allSpriteDatas = JsonUtility.FromJson<SpriteDataContainer>(unityWebRequest.downloadHandler.text);
+                DownloadSprite();
             }
-            if (hataVar)
+            catch
             {
-                Debug.LogError("Bilgi uyumsuz geldi. Hata : " + unityWebRequest.error);
-                StartCoroutine(GetGamesData(driveStartLink + driveJsonLink));
+                SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+                //hataVar = true;
             }
-            unityWebRequest.Dispose();
+        }
+        //if (hataVar)
+        //{
+        //    Debug.LogError("Bilgi uyumsuz geldi. Hata : " + unityWebRequest.error);
+        //    StartCoroutine(GetGamesData(driveStartLink + driveJsonLink));
+        //}
+        unityWebRequest.Dispose();
+    }
+    private void DownloadSprite()
+    {
+        if (!diaryCall)
+        {
+            try
+            {
+                DownloadDiarySprite();
+                diaryCall = true;
+            }
+            catch
+            {
+                Debug.LogError("Diary sprite arızası.");
+            }
+        }
+        if (!groupCall)
+        {
+            try
+            {
+                DownloadAllGroupSprite();
+                groupCall = true;
+            }
+            catch
+            {
+                Debug.LogError("Group sprite arızası.");
+            }
+        }
+        if (!backgroundCall)
+        {
+            try
+            {
+                DownloadBackgroundSprite();
+                backgroundCall = true;
+            }
+            catch
+            {
+                Debug.LogError("Background sprite arızası.");
+            }
         }
     }
     private void AddRawImageList(ImageType imageType, RawImage rawImage, List<string> downloadInfo)
     {
+        if (!downloadSprite)
+        {
+            Warning_Manager.Instance.ShowMessage("We start to download your sprite... (Just one time.)", 3);
+            downloadSprite = true;
+        }
         DownloadHolder downloadHolder = new DownloadHolder();
-        downloadHolder.imageType = imageType;
         downloadHolder.rawImage = rawImage;
+        downloadHolder.imageType = imageType;
         for (int e = 0; e < downloadInfo.Count; e++)
         {
             downloadHolder.downloadInfo.Add(downloadInfo[e]);
@@ -228,18 +264,20 @@ public class Download_Manager : Singletion<Download_Manager>
     }
     private void DownloadDiarySprite()
     {
+        bool showDailyWarning = false;
         // Gün atlanmış yeni resim indir.
         if (dateTime.DayOfYear != Save_Load_Manager.Instance.gameData.myLastDate)
         {
+            showDailyWarning = true;
             // Gün atlanmış yeni resim indir.
-            Save_Load_Manager.Instance.gameData.puzzleDiary.Add(new PuzzleDiary(true, null, ""));
+            Save_Load_Manager.Instance.gameData.puzzleDiary.Add(new PuzzleDaily(true, null, ""));
             Save_Load_Manager.Instance.gameData.myLastDate = dateTime.DayOfYear;
         }
         // Gün atlanmışsa sıradaki resmi ver.
         for (int e = Save_Load_Manager.Instance.gameData.puzzleDiary.Count - 1; e >= 0; e--)
         {
             // Diary için Gameobject üret ve rawımage al
-            Puzzle_Diary puzzle = Canvas_Manager.Instance.CreatePuzzleDiarySprite();
+            Puzzle_Daily puzzle = Canvas_Manager.Instance.CreatePuzzleDiarySprite();
             if (File.Exists(Application.persistentDataPath + "/Diary/Diary-" + e + ".kimex"))
             {
                 byte[] allByte;
@@ -267,9 +305,14 @@ public class Download_Manager : Singletion<Download_Manager>
                 puzzle.SetVideo(allSpriteDatas.GameDatas.diaryDatas[e].isVideo);
             }
         }
+        if (showDailyWarning)
+        {
+            Warning_Manager.Instance.ShowMessage("Daily sprite downloading...", 3);
+        }
     }
     private void DownloadAllGroupSprite()
     {
+        List<string> groupNames = new List<string>();
         for (int h = 0; h < allSpriteDatas.GameDatas.groupDatas.Count; h++)
         {
             bool hasGroup = false;
@@ -281,7 +324,11 @@ public class Download_Manager : Singletion<Download_Manager>
                 {
                     // Group var
                     hasGroup = true;
-                    puzzleContainer = Canvas_Manager.Instance.CreatePuzzleGroup1();
+                    if (!File.Exists(Application.persistentDataPath + "/AllGroup/" + grupName))
+                    {
+                        Directory.CreateDirectory(Application.persistentDataPath + "/AllGroup/" + grupName);
+                    }
+                    puzzleContainer = Canvas_Manager.Instance.CreatePuzzleGroup();
                     puzzleContainer.GetComponentInChildren<TextMeshProUGUI>().text = grupName;
                 }
             }
@@ -291,9 +338,10 @@ public class Download_Manager : Singletion<Download_Manager>
                 Save_Load_Manager.Instance.gameData.puzzleGroup.Add(new PuzzleGroup(grupName));
                 Directory.CreateDirectory(Application.persistentDataPath + "/AllGroup/" + grupName);
 
-                puzzleContainer = Canvas_Manager.Instance.CreatePuzzleGroup1();
+                puzzleContainer = Canvas_Manager.Instance.CreatePuzzleGroup();
                 puzzleContainer.GetComponentInChildren<TextMeshProUGUI>().text = grupName;
             }
+            puzzleContainer.name = "Group : " + grupName;
             for (int e = 0; e < allSpriteDatas.GameDatas.groupDatas[h].allGroupPartDatas.Count; e++)
             {
                 bool hasGroupPart = false;
@@ -306,6 +354,10 @@ public class Download_Manager : Singletion<Download_Manager>
                     {
                         // GroupPart var
                         hasGroupPart = true;
+                        if (!File.Exists(Application.persistentDataPath + "/AllGroup/" + grupName + "/" + grupPartName))
+                        {
+                            Directory.CreateDirectory(Application.persistentDataPath + "/AllGroup/" + grupName + "/" + grupPartName);
+                        }
                     }
                 }
                 if (!hasGroupPart)
@@ -320,11 +372,12 @@ public class Download_Manager : Singletion<Download_Manager>
                         puzzleGroupPart.puzzleSingle.Add(new PuzzleSingle());
                     }
                 }
+
                 for (int c = 0; c < allSpriteDatas.GameDatas.groupDatas[h].allGroupPartDatas[e].groupPartDatas.Count; c++)
                 {
                     // Diary için Gameobject üret ve rawımage al
                     RawImage rawImageGroup = null;
-                    if (File.Exists(Application.persistentDataPath + "/AllGroup/" + grupName + "/" + grupPartName + "/" + grupPartName + "-" + e + ".kimex"))
+                    if (File.Exists(Application.persistentDataPath + "/AllGroup/" + grupName + "/" + grupPartName + "/" + grupPartName + "-" + c + ".kimex"))
                     {
                         byte[] allByte;
                         // Dosya var yani resim indirilmiş.
@@ -350,6 +403,10 @@ public class Download_Manager : Singletion<Download_Manager>
                         };
                         if (c == 0)
                         {
+                            if (!groupNames.Contains(grupName))
+                            {
+                                groupNames.Add(grupName);
+                            }
                             rawImageGroup = puzzle.transform.GetComponent<RawImage>();
                         }
                         Save_Load_Manager.Instance.gameData.puzzleGroup[h].puzzleGroupList[e].puzzleSingle[c].isVideo = allSpriteDatas.GameDatas.groupDatas[h].allGroupPartDatas[e].groupPartDatas[c].isVideo;
@@ -357,13 +414,26 @@ public class Download_Manager : Singletion<Download_Manager>
                     }
                 }
                 puzzle.SetPuzzleGroup(h, e);
+                puzzle.name = "Group Part : " + grupPartName;
             }
+        }
+        if (groupNames.Count > 0)
+        {
+            string downloadingGroupName = "";
+            for (int e = 0; e < groupNames.Count; e++)
+            {
+                downloadingGroupName += ", " + groupNames[e];
+            }
+            downloadingGroupName = downloadingGroupName.Remove(0, 2);
+            Warning_Manager.Instance.ShowMessage(downloadingGroupName + " group sprite downloading...", 3);
         }
     }
     private void DownloadBackgroundSprite()
     {
+        bool showBackgroundWarning = false;
         if (Save_Load_Manager.Instance.gameData.puzzleBackground.Count < allSpriteDatas.GameDatas.gameBackground.Count)
         {
+            showBackgroundWarning = true;
             for (int e = Save_Load_Manager.Instance.gameData.puzzleBackground.Count; e < allSpriteDatas.GameDatas.gameBackground.Count; e++)
             {
                 Save_Load_Manager.Instance.gameData.puzzleBackground.Add(new PuzzleBackground(allSpriteDatas.GameDatas.gameBackground[e].myPrice));
@@ -386,6 +456,7 @@ public class Download_Manager : Singletion<Download_Manager>
             }
             else
             {
+                showBackgroundWarning = true;
                 // Dosya yok yani resim indirilmemiş.
                 List<string> downloadInfo = new List<string>
                 {
@@ -395,6 +466,10 @@ public class Download_Manager : Singletion<Download_Manager>
                 };
                 AddRawImageList(ImageType.Background, puzzleBackground.GetComponent<RawImage>(), downloadInfo);
             }
+        }
+        if (showBackgroundWarning)
+        {
+            Warning_Manager.Instance.ShowMessage("Background sprite downloading...", 3);
         }
     }
 }

@@ -35,19 +35,30 @@ public class Piece : MonoBehaviour, IBeginDragHandler, IDropHandler, IDragHandle
             // Piece kenarda
             return;
         }
-        if (Input.GetMouseButtonUp(0))
+        if (Input.touchCount > 0)
         {
-            if (clickTimeNext < 0.25f)
+            if (Input.GetTouch(0).phase > TouchPhase.Ended)
             {
-                // Double click yapıldı.
-                if (Save_Load_Manager.Instance.gameData.canTurnPiece)
-                {
-                    transform.Rotate(Vector3.back * 90);
-                }
+                ClickTimePassed();
             }
-            clickTimeNext = 0;
+        }
+        else if (Input.GetMouseButtonUp(0))
+        {
+            ClickTimePassed();
         }
         clickTimeNext += Time.deltaTime;
+    }
+    private void ClickTimePassed()
+    {
+        if (clickTimeNext < 0.5f)
+        {
+            // Double click yapıldı.
+            if (Save_Load_Manager.Instance.gameData.canTurnPiece)
+            {
+                transform.Rotate(Vector3.back * 90);
+            }
+        }
+        clickTimeNext = 0;
     }
     public void SetPiece(Sprite sprite, bool edge, Vector2Int coor)
     {
@@ -140,6 +151,7 @@ public class Piece : MonoBehaviour, IBeginDragHandler, IDropHandler, IDragHandle
         {
             if (transform.eulerAngles.z == 0)
             {
+                Audio_Manager.Instance.PlayPuzzlePieceRightPlace();
                 myParentRect.DOAnchorPos(myPos, 0.25f);
                 isStuck = true;
                 inMenu = true;

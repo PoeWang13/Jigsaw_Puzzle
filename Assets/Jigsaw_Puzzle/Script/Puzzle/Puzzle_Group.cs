@@ -1,36 +1,15 @@
 ﻿using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class Puzzle_Group : MonoBehaviour
 {
-    private int groupOrder;
-    private int groupPartOrder;
+    private int groupOrder = -1;
+    private int groupPartOrder = -1;
     private TextMeshProUGUI textPuzzlePrice;
     private TextMeshProUGUI textPuzzleAmount;
     private TextMeshProUGUI textPuzzleName;
     private PuzzleGroupPart puzzleGroupPart;
 
-    public void SetPuzzleGroup(PuzzleGroupPart groupPart, int order, int partOrder)
-    {
-        textPuzzleName = transform.Find("Panel-Name").Find("Text-Name").GetComponent<TextMeshProUGUI>();
-        textPuzzleAmount = transform.Find("Panel-Amount").Find("Text-Amount").GetComponent<TextMeshProUGUI>();
-        Transform price = transform.Find("Panel-Price");
-        puzzleGroupPart = groupPart;
-        groupOrder = order;
-        groupPartOrder = partOrder;
-        textPuzzleName.text = puzzleGroupPart.groupPartName;
-        if (groupPart.myNewPrice == 0)
-        {
-            price.gameObject.SetActive(false);
-        }
-        else
-        {
-            textPuzzlePrice = price.Find("Text-Price").GetComponent<TextMeshProUGUI>();
-            SetPriceText();
-        }
-        SetAmountText();
-    }
     public void SetPuzzleGroup(int order, int partOrder)
     {
         textPuzzleName = transform.Find("Panel-Name").Find("Text-Name").GetComponent<TextMeshProUGUI>();

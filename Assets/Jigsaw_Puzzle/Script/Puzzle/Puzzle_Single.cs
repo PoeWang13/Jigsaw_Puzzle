@@ -24,7 +24,7 @@ public class Puzzle_Single : MonoBehaviour
         groupOrder = order;
         groupPartOrder = partOrder;
         singleOrder = single;
-        myImage.texture = null;
+        myImage.texture = puzzSingle.myTexture;
         puzzleVideo.SetActive(puzzleSingle.isVideo);
         puzzleFixed.SetActive(puzzleSingle.isFixed);
     }

@@ -2,6 +2,9 @@
 using DG.Tweening;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using System.Collections;
+using System.Diagnostics;
+using System.Net;
 
 public enum PieceType
 {
@@ -59,32 +62,38 @@ public class Game_Manager : Singletion<Game_Manager>
     public override void OnAwake()
     {
         toolTipCanvas = GetComponentInChildren<Canvas>();
-        CheckAreWeOnline();
+        DayTime();
     }
-    private bool CheckAreWeOnline()
+    [ContextMenu("Day Time")]
+    private void DayTime()
     {
-        // Internet var mı?
-        if (Application.internetReachability == NetworkReachability.ReachableViaLocalAreaNetwork)
+        // Yerel saati veriyor.
+        try
         {
-            //Debug.Log("İnternet adsl ile var.");
-            SetOnlineController(true);
+            using (var response = WebRequest.Create("http://www.google.com").GetResponse())
+            {
+                SetOnlineController(true);
+            }
         }
-        else if (Application.internetReachability == NetworkReachability.ReachableViaCarrierDataNetwork)
+        catch (WebException)
         {
-            //Debug.Log("İnternet telefon hattı ile var.");
-            SetOnlineController(true);
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
-        else if (Application.internetReachability == NetworkReachability.NotReachable)
-        {
-            //Debug.Log("İnternet yok.");
-            SetOnlineController(false);
-        }
-        return areWeOnline;
     }
     private void SetOnlineController(bool online)
     {
         areWeOnline = online;
         onlineController.SetActive(!areWeOnline);
+        if (!areWeOnline)
+        {
+            Debug.Log("Nete bağlı değiliz. Her saniye kontrol et. Bağlanınca sayfayı yeniden yükle.");
+            StartCoroutine(ControlConnection());
+        }
+    }
+    IEnumerator ControlConnection()
+    {
+        yield return new WaitForSeconds(1);
+        DayTime();
     }
     private void Update()
     {
@@ -154,9 +163,9 @@ public class Game_Manager : Singletion<Game_Manager>
         {
             gameStart = false;
             Canvas_Manager.Instance.PuzzleFinish();
+            Audio_Manager.Instance.PlayPuzzleFixed();
         }
     }
-
     public void StartPuzzle(Sprite puzzleSprite)
     {
         gameTimeNext = 0;
@@ -284,7 +293,7 @@ public class Game_Manager : Singletion<Game_Manager>
                                 layoutGroup.enabled = false;
                                 DOVirtual.DelayedCall(waitingDelay, () =>
                                 {
-                                    // Remismleri karıştır ve holdera ekle
+                                    // Resimleri karıştır ve holdera ekle
                                     while (pieces.Count > 0)
                                     {
                                         int rndPiece = Random.Range(0, pieces.Count);
@@ -296,6 +305,7 @@ public class Game_Manager : Singletion<Game_Manager>
                                         }
                                         pieces.RemoveAt(rndPiece);
                                     }
+                                    Audio_Manager.Instance.PlayPuzzlePieceMixed();
                                 });
                             });
                         });
