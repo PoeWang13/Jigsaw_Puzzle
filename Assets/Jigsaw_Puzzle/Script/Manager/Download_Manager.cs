@@ -1,11 +1,9 @@
 ﻿using TMPro;
 using System;
 using System.IO;
-using System.Net;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
-using System.Globalization;
 using UnityEngine.Networking;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
@@ -71,43 +69,19 @@ public class Download_Manager : Singletion<Download_Manager>
     private bool diaryCall = false;
     private bool groupCall = false;
     private bool backgroundCall = false;
-    //private int gameDataLearningDeneme = 10;
     private string driveJsonLink = "1YFz7NyFlrjhHtJBISpbS8HXJUmFzx5bR";
     private string driveStartLink = "https://drive.google.com/uc?export=download&id=";
-    private DateTime dateTime;
 
     private void Start()
     {
         if (Game_Manager.Instance.AreWeOnline)
         {
-            DayTime();
             StartCoroutine(GetGamesData(driveStartLink + driveJsonLink));
-        }
-    }
-    [ContextMenu("Day Time")]
-    private void DayTime()
-    {
-        // Yerel saati veriyor.
-        try
-        {
-            using (var response = WebRequest.Create("http://www.google.com").GetResponse())
-            {
-                dateTime = DateTime.ParseExact(response.Headers["date"], "ddd, dd MMM yyyy HH:mm:ss 'GMT'", CultureInfo.InvariantCulture.DateTimeFormat, DateTimeStyles.AssumeUniversal);
-            }
-        }
-        catch (WebException)
-        {
-            Debug.Log(DateTime.Now);
         }
     }
     IEnumerator GetGamesData(string url)
     {
         Warning_Manager.Instance.ShowMessage("We are checking your sprite. Wait a second please...", 3);
-        //gameDataLearningDeneme--;
-        //if (gameDataLearningDeneme >= 0)
-        //{
-        //}
-        //bool hataVar = false;
         UnityWebRequest unityWebRequest = UnityWebRequest.Get(url);
 
         yield return unityWebRequest.SendWebRequest();
@@ -120,38 +94,24 @@ public class Download_Manager : Singletion<Download_Manager>
         {
             try
             {
-                if (!File.Exists(Application.persistentDataPath + "/Diary"))
-                {
-                    Directory.CreateDirectory(Application.persistentDataPath + "/Diary");
-                }
-                if (!File.Exists(Application.persistentDataPath + "/AllGroup"))
-                {
-                    Directory.CreateDirectory(Application.persistentDataPath + "/AllGroup");
-                }
-                if (!File.Exists(Application.persistentDataPath + "/Background"))
-                {
-                    Directory.CreateDirectory(Application.persistentDataPath + "/Background");
-                }
                 allSpriteDatas = JsonUtility.FromJson<SpriteDataContainer>(unityWebRequest.downloadHandler.text);
                 DownloadSprite();
             }
             catch
             {
                 SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-                //hataVar = true;
             }
         }
-        //if (hataVar)
-        //{
-        //    Debug.LogError("Bilgi uyumsuz geldi. Hata : " + unityWebRequest.error);
-        //    StartCoroutine(GetGamesData(driveStartLink + driveJsonLink));
-        //}
         unityWebRequest.Dispose();
     }
     private void DownloadSprite()
     {
         if (!diaryCall)
         {
+            if (!File.Exists(Application.persistentDataPath + "/Diary"))
+            {
+                Directory.CreateDirectory(Application.persistentDataPath + "/Diary");
+            }
             try
             {
                 DownloadDiarySprite();
@@ -164,6 +124,10 @@ public class Download_Manager : Singletion<Download_Manager>
         }
         if (!groupCall)
         {
+            if (!File.Exists(Application.persistentDataPath + "/AllGroup"))
+            {
+                Directory.CreateDirectory(Application.persistentDataPath + "/AllGroup");
+            }
             try
             {
                 DownloadAllGroupSprite();
@@ -176,6 +140,10 @@ public class Download_Manager : Singletion<Download_Manager>
         }
         if (!backgroundCall)
         {
+            if (!File.Exists(Application.persistentDataPath + "/Background"))
+            {
+                Directory.CreateDirectory(Application.persistentDataPath + "/Background");
+            }
             try
             {
                 DownloadBackgroundSprite();
@@ -222,32 +190,38 @@ public class Download_Manager : Singletion<Download_Manager>
         }
         else
         {
-            Texture2D gameTexture = DownloadHandlerTexture.GetContent(unityWebRequest);
-            byte[] screenShotByteArray = gameTexture.EncodeToPNG();
-            File.WriteAllBytes(downloadInfos[0].downloadInfo[1], screenShotByteArray);
-            Save_Load_Manager.Instance.gameData.myLastDate = dateTime.DayOfYear;
-            if (downloadInfos[0].rawImage != null)
+            try
             {
-                downloadInfos[0].rawImage.texture = gameTexture;
+                Texture2D gameTexture = DownloadHandlerTexture.GetContent(unityWebRequest);
+                byte[] screenShotByteArray = gameTexture.EncodeToPNG();
+                File.WriteAllBytes(downloadInfos[0].downloadInfo[1], screenShotByteArray);
+                Save_Load_Manager.Instance.gameData.myLastDate = Game_Manager.Instance.DateTime.DayOfYear;
+                if (downloadInfos[0].rawImage != null)
+                {
+                    downloadInfos[0].rawImage.texture = gameTexture;
+                }
+                int order = -1;
+                if (downloadInfos[0].imageType == ImageType.Diary)
+                {
+                    order = int.Parse(downloadInfos[0].downloadInfo[2]);
+                    Save_Load_Manager.Instance.gameData.puzzleDiary[order].myTexture = gameTexture;
+                }
+                else if (downloadInfos[0].imageType == ImageType.Single)
+                {
+                    //string url, string path, int groupOrder, int groupPartOrder, int puzzleOrder, bool isVideo
+                    int groupOrder = int.Parse(downloadInfos[0].downloadInfo[2]);
+                    int groupPartOrder = int.Parse(downloadInfos[0].downloadInfo[3]);
+                    int puzzleOrder = int.Parse(downloadInfos[0].downloadInfo[4]);
+                    Save_Load_Manager.Instance.gameData.puzzleGroup[groupOrder].puzzleGroupList[groupPartOrder].puzzleSingle[puzzleOrder].myTexture = gameTexture;
+                }
+                else if (downloadInfos[0].imageType == ImageType.Background)
+                {
+                    order = int.Parse(downloadInfos[0].downloadInfo[2]);
+                    Save_Load_Manager.Instance.gameData.puzzleBackground[order].myTexture = gameTexture;
+                }
             }
-            int order = -1;
-            if (downloadInfos[0].imageType == ImageType.Diary)
+            catch
             {
-                order = int.Parse(downloadInfos[0].downloadInfo[2]);
-                Save_Load_Manager.Instance.gameData.puzzleDiary[order].myTexture = gameTexture;
-            }
-            if (downloadInfos[0].imageType == ImageType.Single)
-            {
-                //string url, string path, int groupOrder, int groupPartOrder, int puzzleOrder, bool isVideo
-                int groupOrder = int.Parse(downloadInfos[0].downloadInfo[2]);
-                int groupPartOrder = int.Parse(downloadInfos[0].downloadInfo[3]);
-                int puzzleOrder = int.Parse(downloadInfos[0].downloadInfo[4]);
-                Save_Load_Manager.Instance.gameData.puzzleGroup[groupOrder].puzzleGroupList[groupPartOrder].puzzleSingle[puzzleOrder].myTexture = gameTexture;
-            }
-            if (downloadInfos[0].imageType == ImageType.Background)
-            {
-                order = int.Parse(downloadInfos[0].downloadInfo[2]);
-                Save_Load_Manager.Instance.gameData.puzzleBackground[order].myTexture = gameTexture;
             }
         }
         unityWebRequest.Dispose();
@@ -265,15 +239,19 @@ public class Download_Manager : Singletion<Download_Manager>
     private void DownloadDiarySprite()
     {
         bool showDailyWarning = false;
-        // Gün atlanmış yeni resim indir.
-        if (dateTime.DayOfYear != Save_Load_Manager.Instance.gameData.myLastDate)
+        // Gün atlanmış yeni resim için datada yer oluştur.
+        if (Game_Manager.Instance.DateTime.DayOfYear != Save_Load_Manager.Instance.gameData.myLastDate)
         {
             showDailyWarning = true;
             // Gün atlanmış yeni resim indir.
-            Save_Load_Manager.Instance.gameData.puzzleDiary.Add(new PuzzleDaily(true, null, ""));
-            Save_Load_Manager.Instance.gameData.myLastDate = dateTime.DayOfYear;
+            Save_Load_Manager.Instance.gameData.myLastDate = Game_Manager.Instance.DateTime.DayOfYear;
+            Save_Load_Manager.Instance.gameData.puzzleDiary.Add(new PuzzleDaily());
+            Save_Load_Manager.Instance.gameData.puzzleDiary.Add(new PuzzleDaily());
+            Save_Load_Manager.Instance.gameData.puzzleDiary.Add(new PuzzleDaily());
+            Save_Load_Manager.Instance.gameData.puzzleDiary.Add(new PuzzleDaily());
+            Save_Load_Manager.Instance.gameData.puzzleDiary.Add(new PuzzleDaily());
         }
-        // Gün atlanmışsa sıradaki resmi ver.
+        // Gün atlanmışsa sıradaki 5 resmi indir.
         for (int e = Save_Load_Manager.Instance.gameData.puzzleDiary.Count - 1; e >= 0; e--)
         {
             // Diary için Gameobject üret ve rawımage al
@@ -299,9 +277,9 @@ public class Download_Manager : Singletion<Download_Manager>
                 };
                 AddRawImageList(ImageType.Diary, puzzle.GetComponent<RawImage>(), downloadInfo);
                 puzzle.SetPuzzleSimpleDiary(e);
-                Save_Load_Manager.Instance.gameData.puzzleDiary[e].myDate = dateTime.Day + "/" + dateTime.Month;
+                Save_Load_Manager.Instance.gameData.puzzleDiary[e].myDate = Game_Manager.Instance.DateTime.Day + "/" + Game_Manager.Instance.DateTime.Month;
                 Save_Load_Manager.Instance.gameData.puzzleDiary[e].isVideo = allSpriteDatas.GameDatas.diaryDatas[e].isVideo;
-                puzzle.SetDate(dateTime.Day + "/" + dateTime.Month);
+                puzzle.SetDate(Game_Manager.Instance.DateTime.Day + "/" + Game_Manager.Instance.DateTime.Month);
                 puzzle.SetVideo(allSpriteDatas.GameDatas.diaryDatas[e].isVideo);
             }
         }

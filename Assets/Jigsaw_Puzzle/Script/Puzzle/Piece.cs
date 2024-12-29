@@ -17,7 +17,6 @@ public class Piece : MonoBehaviour, IBeginDragHandler, IDropHandler, IDragHandle
     private Vector2 myParentEdgeScale;
 
     private Vector2 myPos;
-    private Vector2Int myCoor;
     private Transform myParent;
 
     public bool IsStuck { get { return isStuck; } }
@@ -60,15 +59,14 @@ public class Piece : MonoBehaviour, IBeginDragHandler, IDropHandler, IDragHandle
         }
         clickTimeNext = 0;
     }
-    public void SetPiece(Sprite sprite, bool edge, Vector2Int coor)
+    public void SetPiece(Sprite sprite, bool edge)
     {
         isEdge = edge;
         inMenu = true;
-        myCoor = coor;
         myImage.sprite = sprite;
 
-        myParentEdgeScale = Game_Manager.Instance.MyParentEdgeScale;
-        closeDistance = Game_Manager.Instance.CloseDistance;
+        closeDistance = Jigsaw_Manager.Instance.CloseDistance;
+        myParentEdgeScale = Jigsaw_Manager.Instance.MyParentEdgeScale;
     }
     public void SetPos()
     {
@@ -115,13 +113,13 @@ public class Piece : MonoBehaviour, IBeginDragHandler, IDropHandler, IDragHandle
                 {
                     return;
                 }
-                // Yan menuden çıkart
-                if (Canvas_Manager.Instance.RemovePuzzlePieceFromHolder(this))
-                {
-                    inMenu = false;
-                    // Orj size yap
-                    SetPieceSizeForEdge(false);
-                }
+                //// Yan menuden çıkart
+                //if (Canvas_Manager.Instance.RemovePuzzlePieceFromHolder(this))
+                //{
+                //    inMenu = false;
+                //    // Orj size yap
+                //    SetPieceSizeForEdge(false);
+                //}
                 transform.parent.SetAsLastSibling();
                 Game_Manager.Instance.SetMovingPiece(myParentRect);
             }
@@ -136,7 +134,7 @@ public class Piece : MonoBehaviour, IBeginDragHandler, IDropHandler, IDragHandle
             {
                 // Holdera koy
                 inMenu = true;
-                Canvas_Manager.Instance.AddPuzzlePieceToHolder(this);
+                //Canvas_Manager.Instance.AddPuzzlePieceToHolder(this);
                 Game_Manager.Instance.SetMovingPiece(null);
                 return;
             }
@@ -145,7 +143,7 @@ public class Piece : MonoBehaviour, IBeginDragHandler, IDropHandler, IDragHandle
             Game_Manager.Instance.SetMovingPiece(null);
         }
     }
-    public void CheckPos(bool checkNeighbor = false)
+    public void CheckPos()
     {
         if (Vector2.SqrMagnitude(myPos - myParentRect.anchoredPosition) < closeDistance)
         {
@@ -157,15 +155,7 @@ public class Piece : MonoBehaviour, IBeginDragHandler, IDropHandler, IDragHandle
                 inMenu = true;
                 myImage.raycastTarget = false;
                 transform.parent.SetAsFirstSibling();
-                Game_Manager.Instance.CheckPuzzle();
-            }
-        }
-        else
-        {
-            if (checkNeighbor)
-            {
-                // Komsularla yakınlık kontrolu yap.
-                Game_Manager.Instance.IsPieceConnectNeighbor(this, myCoor);
+                Jigsaw_Manager.Instance.CheckPuzzle();
             }
         }
     }

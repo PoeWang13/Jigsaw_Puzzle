@@ -6,20 +6,6 @@ public class Fikirler : MonoBehaviour
     // InterRewarded : ca-app-pub-1398478089736122/4846288178
     // Rewarded : ca-app-pub-1398478089736122/2574082702
 
-
-
-
-
-
-    // uı
-    //+ yerine konma
-    //+ kazanma
-    //+ game back
-    // menu back
-    //+ paraRelease of invalid GC handle. The handle is from a previous domain. The release operation is skipped.
-    // Release of invalid GC handle. The handle is from a previous domain. The release operation is skipped.
-    // No Advertisement
-
     /* 
      * 1-4 Mevsim
      * -Bahar

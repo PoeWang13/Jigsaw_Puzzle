@@ -51,25 +51,13 @@ public class PuzzleSingle
     public PuzzleSingle()
     {
     }
-    public PuzzleSingle(Texture2D myTexture)
-    {
-        this.myTexture = myTexture;
-    }
-    public PuzzleSingle(bool isVideo, Texture2D myTexture)
-    {
-        this.isVideo = isVideo;
-        this.myTexture = myTexture;
-    }
 }
 [Serializable]
 public class PuzzleDaily : PuzzleSingle
 {
     public string myDate;
-    public PuzzleDaily(bool isVideo, Texture2D myTexture, string myDate) : base(isVideo, myTexture)
+    public PuzzleDaily() : base()
     {
-        this.myDate = myDate;
-        this.isVideo = isVideo;
-        this.myTexture = myTexture;
     }
 }
 [Serializable]
@@ -101,7 +89,7 @@ public class Save_Load_Manager : Singletion<Save_Load_Manager>
     private Save_Load_File_Data_Handler save_Load_File_Data_Handler;
     public override void OnAwake()
     {
-        DontDestroyOnLoad(gameObject);
+        //DontDestroyOnLoad(gameObject);
         if (string.IsNullOrEmpty(fileName))
         {
             #if UNITY_2022_1_OR_NEWER
@@ -131,51 +119,6 @@ public class Save_Load_Manager : Singletion<Save_Load_Manager>
     }
     private void OnApplicationQuit()
     {
-        //int Year = DateTime.UtcNow.Year;
-        //int Month = DateTime.UtcNow.Month;
-        //int Day = DateTime.UtcNow.Day;
-        ////int Hour = DateTime.UtcNow.Hour + hoursFark;
-        //int Hour = DateTime.UtcNow.Hour;
-        //int Minute = DateTime.UtcNow.Minute;
-        //int Second = DateTime.UtcNow.Second;
-
-        //if (Hour > 24)
-        //{
-        //    Hour -= 24;
-        //    Day += 1;
-        //}
-        //if (Month == 1 || Month == 3 || Month == 5 || Month == 7 || Month == 8 || Month == 10 || Month == 12)
-        //{
-        //    if (Day > 31)
-        //    {
-        //        Day -= 31;
-        //        Month += 1;
-        //    }
-        //}
-        //if (Month == 4 || Month == 6 || Month == 9 || Month == 11)
-        //{
-        //    if (Day > 30)
-        //    {
-        //        Day -= 30;
-        //        Month += 1;
-        //    }
-        //}
-        //if (Month == 2)
-        //{
-        //    if (Day > 28)
-        //    {
-        //        Day -= 28;
-        //        Month += 1;
-        //    }
-        //}
-        //if (Month > 12)
-        //{
-        //    Month -= 12;
-        //    Year += 1;
-        //}
-        //DateTime dateTime = new DateTime(Year, Month, Day, Hour, Minute, Second);
-        ////gameData.lastOnlineDayTime = new DayTime(dateTime);
-
         SaveGame();
     }
     #endregion
